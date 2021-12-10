@@ -1,0 +1,4 @@
+asyncio
+winrt
+pypresence
+psutil
