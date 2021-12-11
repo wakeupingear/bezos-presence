@@ -28,8 +28,8 @@ track = dict(default)
 client_id = '917341970790244362'
 
 
-def setup():
-    if os.path.exists('settings.json'):
+def setup(isDev):
+    if os.path.exists('settings.json') and not isDev:
         with open('settings.json', 'r') as f:
             settings.update(json.load(f))
     else:
@@ -47,60 +47,56 @@ def checkMusic(RPC):
     threading.Timer(settings['check_interval'], checkMusic, [RPC]).start()
     media = asyncio.run(get_media_info(settings["apps"]))
     if (media == None):
-        media=dict(default)
+        media = dict(default)
     media = {k: v for k,
              v in media.items() if k in track}
     if (media != track):
         track.update(media)
-        temp = dict(track)
+        data = [track['artist'], track['title'], track['album_title']]
+        if (data[0] == "" and data[1] == "" and data[2] == ""):
+            RPC.clear()
+            print("Cleared")
+            return
 
         # Parse current track
-        if (temp["artist"] == temp["title"]):
-            temp["artist"] = ""
-            temp["title"] = "Listening to " + temp["title"]
-        else:
-            if (temp["artist"] != ""):
-                temp["artist"] = "by " + temp["artist"]
-            else:
-                temp["title"] = "Listening to '" + temp["title"] + "'"
+        if (data[0] == data[1]):
+            data[1] = ""
+
         # Apply settings
         if (settings["remove_explicit"]):
-            temp["title"] = temp["title"].replace("[Explicit]", "").strip()
-            temp["artist"] = temp["artist"].replace("[Explicit]", "").strip()
+            for i, val in enumerate(data):
+                data[i] = val.replace("[Explicit]", "").strip()
         if (settings["remove_clean"]):
-            temp["title"] = temp["title"].replace("[Clean]", "").strip()
-            temp["artist"] = temp["artist"].replace("[Clean]", "").strip()
+            for i, val in enumerate(data):
+                data[i] = val.replace("[Clean]", "").strip()
         if (settings["remove_feat"]):
-            temp["title"] = re.sub(r"\[[^()]*\]", "", temp["title"]).strip()
-            temp["artist"] = re.sub(r"\[[^()]*\]", "", temp["artist"]).strip()
+            for i, val in enumerate(data):
+                data[i] = re.sub(r"\[[^()]*\]", "", val).strip()
         if (settings["no_parentheses"]):
-            temp["title"] = re.sub(r"\([^()]*\)", "", temp["title"]).strip()
-            temp["artist"] = re.sub(r"\([^()]*\)", "", temp["artist"]).strip()
+            for i, val in enumerate(data):
+                data[i] = re.sub(r"\([^()]*\)", "", val).strip()
 
-        header = temp["title"]
-        if (header != "" and header[0] != "'"):
-            header = "'" + header + "'"
-        details = temp["artist"]
-        if (details == "" and header == ""):
-            RPC.clear()
-            return
-        elif (header == ""):
-            RPC.update(state=details)
-        elif (details == ""):
+        header = "Listening to "+data[0]
+        details = data[1]
+        if (data[2] != ""):
+            if (data[1] != ""):
+                details += " - " + data[2]
+            else:
+                details = data[2]
+        if (details == ""):
             RPC.update(state=header)
         else:
             RPC.update(state=details, details=header)
-        print(temp)
+        print(data)
 
 
 def main():
-    setup()
-
     isDev = False
     for i, arg in enumerate(sys.argv):
         if (arg == '--dev'):
             isDev = True
             print("Running in dev mode")
+    setup(isDev)
 
     checkMusic(connect())
 
