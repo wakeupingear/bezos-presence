@@ -25,7 +25,9 @@ settings = {
     "check_interval": 5,
     "no_parentheses": True,
     "apps": ["amazon"],
-    "funny_photo": True
+    "funny_photo": True,
+    "listening_to": "",
+    "artist_first": False,
 }
 default = {
     "album_title": "",
@@ -62,11 +64,14 @@ def checkMusic(RPC):
              v in media.items() if k in track}
     if (media != track):
         track.update(media)
-        data = [track['artist'], track['title'], track['album_title']]
+        data = [track['title'], track['artist'], track['album_title']]
         if (data[0] == "" and data[1] == "" and data[2] == ""):
             RPC.clear()
             print("Cleared")
             return
+
+        if (settings['artist_first']):
+            data = [track['artist'], track['title'], track['album_title']]
 
         # Parse current track
         if (data[0] == data[1]): # If artist and title are the same, remove title
@@ -89,7 +94,7 @@ def checkMusic(RPC):
             for i, val in enumerate(data):
                 data[i] = re.sub(r"\([^()]*\)", "", val).strip()
 
-        header = "Listening to "+data[0]
+        header = settings["listening_to"]+data[0]
         details = data[1]
         if (data[2] != ""):
             if (data[1] != ""):
