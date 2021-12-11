@@ -18,11 +18,12 @@ settings = {
     "no_parentheses": True,
     "apps": ["amazon"]
 }
-track = {
+default = {
     "album_title": "",
     "artist": "",
     "title": "",
 }
+track = dict(default)
 
 client_id = '917341970790244362'
 
@@ -35,8 +36,6 @@ def setup():
         with open('settings.json', 'w') as f:
             json.dump(settings, f)
 
-    client_id = '917341970790244362'
-
 
 def connect():
     RPC = Presence(client_id, pipe=0)
@@ -48,8 +47,7 @@ def checkMusic(RPC):
     threading.Timer(settings['check_interval'], checkMusic, [RPC]).start()
     media = asyncio.run(get_media_info(settings["apps"]))
     if (media == None):
-        RPC.clear()
-        return
+        media=dict(default)
     media = {k: v for k,
              v in media.items() if k in track}
     if (media != track):

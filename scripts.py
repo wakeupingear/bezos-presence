@@ -22,7 +22,12 @@ async def get_media_info(validApps):
                         valid = True
                         break
             if valid:
-                info = await current_session.try_get_media_properties_async()
+                try:
+                    info = await current_session.try_get_media_properties_async()
+                except:
+                    # opening the app without music playing sometimes
+                    # fills the box with null data, causing a crash 
+                    return
 
                 # song_attr[0] != '_' ignores system attributes
                 info_dict = {song_attr: info.__getattribute__(
