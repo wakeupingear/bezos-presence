@@ -3,7 +3,11 @@ from winrt.windows.media.control import \
 
 appIDs = {
     'amazon': ['Amazon Music.exe'],
-    'spotify': ['Spotify.exe']
+    'spotify': ['Spotify.exe'],
+    'itunes': ['iTunes.exe'],
+    'edge': ['msedge.exe'],
+    'chrome': ['chrome.exe'],
+    'firefox': ['firefox.exe'],
 }
 
 # https://stackoverflow.com/questions/65011660/how-can-i-get-the-title-of-the-currently-playing-media-in-windows-10-with-python
@@ -13,20 +17,24 @@ async def get_media_info(validApps):
     sessions = await MediaManager.request_async()
 
     allSessions = sessions.get_sessions()
+    appName = ""
     for current_session in allSessions:
         if current_session:
+            # print(current_session.source_app_user_model_id)
             valid = ("*" in validApps)
-            if not valid:
-                for app in validApps:
-                    if current_session.source_app_user_model_id in appIDs[app]:
-                        valid = True
-                        break
+            for app in validApps:
+                if (app == "*"):
+                    continue
+                if current_session.source_app_user_model_id in appIDs[app]:
+                    appName = app
+                    valid = True
+                    break
             if valid:
                 try:
                     info = await current_session.try_get_media_properties_async()
                 except:
                     # opening the app without music playing sometimes
-                    # fills the box with null data, causing a crash 
+                    # fills the box with null data, causing a crash
                     return
 
                 # song_attr[0] != '_' ignores system attributes
@@ -35,6 +43,7 @@ async def get_media_info(validApps):
 
                 # converts winrt vector to list
                 info_dict['genres'] = list(info_dict['genres'])
+                info_dict['app_name'] = appName
                 return info_dict
 
     return None

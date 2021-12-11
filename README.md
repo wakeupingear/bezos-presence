@@ -1,5 +1,5 @@
 # Bezos Presence
-![jeffrey](jeff.jpg)
+![jeffrey](./assets/jeff.jpg)
 ## Discord Integration for Amazon Music (and other things)
 Ever wanted to tell the world that you use Amazon Music? Absolutely not? Well, now you can!
 

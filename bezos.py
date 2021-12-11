@@ -10,13 +10,22 @@ import re
 
 from scripts import *
 
+appData = {
+    "amazon": ["amazon", "Amazon Music"],
+    "spotify": ["spotify", "Spotify"],
+    "itunes": ["itunes", "iTunes"],
+    "edge": ["edge", "Microsoft Edge"],
+    "chrome": ["chrome", "Google Chrome"],
+    "firefox": ["firefox", "Firefox"],
+}
 settings = {
     "remove_explicit": True,
     "remove_clean": True,
     "remove_feat": False,
     "check_interval": 5,
     "no_parentheses": True,
-    "apps": ["amazon"]
+    "apps": ["amazon"],
+    "funny_photo": True
 }
 default = {
     "album_title": "",
@@ -48,6 +57,7 @@ def checkMusic(RPC):
     media = asyncio.run(get_media_info(settings["apps"]))
     if (media == None):
         media = dict(default)
+    appName = media['app_name']
     media = {k: v for k,
              v in media.items() if k in track}
     if (media != track):
@@ -59,7 +69,10 @@ def checkMusic(RPC):
             return
 
         # Parse current track
-        if (data[0] == data[1]):
+        if (data[0] == data[1]): # If artist and title are the same, remove title
+            data[1] = ""
+        elif (data[0] == ""): # Artist is empty
+            data[0] = data[1]
             data[1] = ""
 
         # Apply settings
@@ -83,10 +96,19 @@ def checkMusic(RPC):
                 details += " - " + data[2]
             else:
                 details = data[2]
+
+        photoData = ["fakephoto", "joe"]
+        if (settings["funny_photo"]):
+            photoData = ["jeffrey", "Jeffrey Music"]
+        elif (appName != ""):
+            photoData = appData[appName]
+
         if (details == ""):
-            RPC.update(state=header)
+            RPC.update(
+                state=header, large_image=photoData[0], large_text=photoData[1])
         else:
-            RPC.update(state=details, details=header)
+            RPC.update(state=details, details=header,
+                       large_image=photoData[0], large_text=photoData[1])
         print(data)
 
 
