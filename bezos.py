@@ -32,7 +32,7 @@ appData = {
 settings = {
     "remove_explicit": True,
     "remove_clean": True,
-    "remove_feat": False,
+    "remove_feat": True,
     "check_interval": 5,
     "no_parentheses": True,
     "apps": ["amazon"],
@@ -139,6 +139,8 @@ def checkMusic(RPC):
         if (settings["remove_feat"]):
             for i, val in enumerate(data):
                 data[i] = re.sub(r"\[[^()]*\]", "", val).strip()
+                if (data[i].find("feat") != -1):
+                    data[i] = data[i][:data[i].find("feat")].strip()
         if (settings["no_parentheses"]):
             for i, val in enumerate(data):
                 data[i] = re.sub(r"\([^()]*\)", "", val).strip()
