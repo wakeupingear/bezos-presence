@@ -31,4 +31,4 @@ Linux: [much easier](https://stackoverflow.com/questions/24518522/run-python-scr
 ## Credits
 Made with great hatred by [Will Farhat](willfarhat.com)
 
-(ironically, this actually works quite well as a catch-all audio plugin beyond just amazon. i don't know how to feel about that.)
+(ironically, this actually works quite well as a catch-all audio plugin beyond just amazon. i don't know how to feel about that. if you actually want to use it, you can turn off bezos mode and pick what apps can display audio in settings.json.)
