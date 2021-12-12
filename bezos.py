@@ -36,7 +36,7 @@ settings = {
     "check_interval": 5,
     "no_parentheses": True,
     "apps": ["amazon"],
-    "funny_photo": True,
+    "bezos_mode": False,
     "listening_to": "",
     "artist_first": False,
 }
@@ -44,10 +44,9 @@ default = {
     "album_title": "",
     "artist": "",
     "title": "",
+    "app_name": "",
 }
 track = dict(default)
-
-client_id = '917341970790244362'
 
 
 async def get_media_info(validApps):
@@ -72,7 +71,7 @@ async def get_media_info(validApps):
                 except:
                     # opening the app without music playing sometimes
                     # fills the box with null data, causing a crash
-                    return
+                    return None
 
                 # song_attr[0] != '_' ignores system attributes
                 info_dict = {song_attr: info.__getattribute__(
@@ -96,7 +95,10 @@ def setup(isDev):
 
 
 def connect():
-    RPC = Presence(client_id, pipe=0)
+    if (settings["bezos_mode"]):
+        RPC = Presence(client_id='919485848028872715', pipe=0)
+    else:
+        RPC = Presence(client_id='917341970790244362', pipe=0)
     RPC.connect()
     return RPC
 
@@ -150,7 +152,7 @@ def checkMusic(RPC):
                 details = data[2]
 
         photoData = ["fakephoto", "joe"]
-        if (settings["funny_photo"]):
+        if (settings["bezos_mode"]):
             photoData = ["jeffrey", "Jeffrey Music"]
         elif (appName != ""):
             photoData = appData[appName]
