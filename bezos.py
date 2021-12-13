@@ -10,35 +10,32 @@ import re
 
 from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 
-appIDs = {
-    'amazon': ['Amazon Music.exe'],
-    'spotify': ['Spotify.exe'],
-    'itunes': ['iTunes.exe'],
-    'edge': ['msedge.exe'],
-    'chrome': ['chrome.exe'],
-    'firefox': ['firefox.exe'],
-}
-
 # https://stackoverflow.com/questions/65011660/how-can-i-get-the-title-of-the-currently-playing-media-in-windows-10-with-python
 
-appData = {
-    "amazon": ["amazon", "Amazon Music"],
-    "spotify": ["spotify", "Spotify"],
-    "itunes": ["itunes", "iTunes"],
-    "edge": ["edge", "Microsoft Edge"],
-    "chrome": ["chrome", "Google Chrome"],
-    "firefox": ["firefox", "Firefox"],
-}
 settings = {
+    "bezos_mode": False,
     "remove_explicit": True,
     "remove_clean": True,
     "remove_feat": True,
     "check_interval": 5,
     "no_parentheses": True,
-    "apps": ["amazon"],
-    "bezos_mode": False,
+    "validApps": ["amazon"],
     "listening_to": "",
     "artist_first": False,
+    "photo_override": "",
+    "apps": {
+        "amazon": ["amazon", "Amazon Music", ["Amazon Music.exe"]],
+        "spotify": ["spotify", "Spotify", ["Spotify.exe"]],
+        "itunes": ["itunes", "iTunes", ["iTunes.exe"]],
+        "edge": ["edge", "Microsoft Edge", ["msedge.exe"]],
+        "chrome": ["chrome", "Google Chrome", ["chrome.exe"]],
+        "firefox": ["firefox", "Firefox", ["firefox.exe"]],
+        "hub": ["hub", "The Hub", []],
+        "youtube": ["youtube", "YouTube", []],
+        "twitch": ["twitch", "Twitch", ["Twitch.exe"]],
+        "tiktok": ["tiktok", "TikTok", ["TikTok.exe"]],
+        "netflix": ["netflix", "Netflix", ["Netflix.exe"]],
+    }
 }
 default = {
     "album_title": "",
@@ -61,7 +58,7 @@ async def get_media_info(validApps):
             for app in validApps:
                 if (app == "*"):
                     continue
-                if current_session.source_app_user_model_id in appIDs[app]:
+                if current_session.source_app_user_model_id in settings["apps"][app][2]:
                     appName = app
                     valid = True
                     break
@@ -105,7 +102,7 @@ def connect():
 
 def checkMusic(RPC):
     threading.Timer(settings['check_interval'], checkMusic, [RPC]).start()
-    media = asyncio.run(get_media_info(settings["apps"]))
+    media = asyncio.run(get_media_info(settings["validApps"]))
     if (media == None):
         media = dict(default)
     appName = media['app_name']
@@ -139,8 +136,12 @@ def checkMusic(RPC):
         if (settings["remove_feat"]):
             for i, val in enumerate(data):
                 data[i] = re.sub(r"\[[^()]*\]", "", val).strip()
-                if (data[i].find("feat") != -1):
-                    data[i] = data[i][:data[i].find("feat")].strip()
+                if (data[i].find("feat.") != -1):
+                    data[i] = data[i][:data[i].find("feat.")].strip()
+                if (data[i].find("ft.") != -1):
+                    data[i] = data[i][:data[i].find("ft.")].strip()
+                if (data[i].find("FT.") != -1):
+                    data[i] = data[i][:data[i].find("FT.")].strip()
         if (settings["no_parentheses"]):
             for i, val in enumerate(data):
                 data[i] = re.sub(r"\([^()]*\)", "", val).strip()
@@ -154,10 +155,12 @@ def checkMusic(RPC):
                 details = data[2]
 
         photoData = ["fakephoto", "joe"]
-        if (settings["bezos_mode"]):
+        if (settings["photo_override"] != ""):
+            photoData = settings["apps"][settings["photo_override"]]
+        elif (settings["bezos_mode"]):
             photoData = ["jeffrey", "Jeffrey Music"]
         elif (appName != ""):
-            photoData = appData[appName]
+            photoData = settings["apps"][appName]
 
         if (details == ""):
             RPC.update(
