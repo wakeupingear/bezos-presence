@@ -19,10 +19,10 @@ settings = {
     "remove_feat": True,
     "check_interval": 5,
     "no_parentheses": True,
-    "validApps": ["amazon"],
+    "validApps": ["*"],
     "listening_to": "",
     "artist_first": False,
-    "photo_override": "",
+    "photo_override": "hub",
     "apps": {
         "amazon": ["amazon", "Amazon Music", ["Amazon Music.exe"]],
         "spotify": ["spotify", "Spotify", ["Spotify.exe"]],
@@ -127,6 +127,9 @@ def checkMusic(RPC):
             data[1] = ""
 
         # Apply settings
+        if (settings["no_parentheses"]):
+            for i, val in enumerate(data):
+                data[i] = re.sub(r"\([^()]*\)", "", val).strip()
         if (settings["remove_explicit"]):
             for i, val in enumerate(data):
                 data[i] = val.replace("[Explicit]", "").strip()
@@ -142,9 +145,6 @@ def checkMusic(RPC):
                     data[i] = data[i][:data[i].find("ft.")].strip()
                 if (data[i].find("FT.") != -1):
                     data[i] = data[i][:data[i].find("FT.")].strip()
-        if (settings["no_parentheses"]):
-            for i, val in enumerate(data):
-                data[i] = re.sub(r"\([^()]*\)", "", val).strip()
 
         header = settings["listening_to"]+data[0]
         details = data[1]
