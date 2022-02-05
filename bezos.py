@@ -1,4 +1,5 @@
 import asyncio
+from asyncio.windows_events import NULL
 import json
 import os
 import threading
@@ -91,84 +92,97 @@ def setup(isDev):
             json.dump(settings, f)
 
 
-def connect():
-    if (settings["bezos_mode"]):
-        RPC = Presence(client_id='919485848028872715', pipe=0)
-    else:
-        RPC = Presence(client_id='917341970790244362', pipe=0)
-    RPC.connect()
-    return RPC
-
-
-def checkMusic(RPC):
-    threading.Timer(settings['check_interval'], checkMusic, [RPC]).start()
-    media = asyncio.run(get_media_info(settings["validApps"]))
-    if (media == None):
-        media = dict(default)
-    appName = media['app_name']
-    media = {k: v for k,
-             v in media.items() if k in track}
-    if (media != track):
-        track.update(media)
-        data = [track['title'], track['artist'], track['album_title']]
-        if (data[0] == "" and data[1] == "" and data[2] == ""):
-            RPC.clear()
-            print("Cleared")
-            return
-
-        if (settings['artist_first']):
-            data = [track['artist'], track['title'], track['album_title']]
-
-        # Parse current track
-        if (data[0] == data[1]):  # If artist and title are the same, remove title
-            data[1] = ""
-        elif (data[0] == ""):  # Artist is empty
-            data[0] = data[1]
-            data[1] = ""
-
-        # Apply settings
-        if (settings["no_parentheses"]):
-            for i, val in enumerate(data):
-                data[i] = re.sub(r"\([^()]*\)", "", val).strip()
-        if (settings["remove_explicit"]):
-            for i, val in enumerate(data):
-                data[i] = val.replace("[Explicit]", "").strip()
-        if (settings["remove_clean"]):
-            for i, val in enumerate(data):
-                data[i] = val.replace("[Clean]", "").strip()
-        if (settings["remove_feat"]):
-            for i, val in enumerate(data):
-                data[i] = re.sub(r"\[[^()]*\]", "", val).strip()
-                if (data[i].find("feat.") != -1):
-                    data[i] = data[i][:data[i].find("feat.")].strip()
-                if (data[i].find("ft.") != -1):
-                    data[i] = data[i][:data[i].find("ft.")].strip()
-                if (data[i].find("FT.") != -1):
-                    data[i] = data[i][:data[i].find("FT.")].strip()
-
-        header = settings["listening_to"]+data[0]
-        details = data[1]
-        if (data[2] != ""):
-            if (data[1] != ""):
-                details += " - " + data[2]
+def connect(thisLoop):
+    while True:
+        try:
+            if (settings["bezos_mode"]):
+                RPC = Presence(client_id='919485848028872715',loop=thisLoop)
             else:
-                details = data[2]
+                RPC = Presence(client_id='917341970790244362',loop=thisLoop)
+            RPC.connect()
+            return RPC
+        except Exception as e:
+            print("Error")
+            print(e)
+            time.sleep(4)
 
-        photoData = ["fakephoto", "joe"]
-        if (settings["photo_override"] != ""):
-            photoData = settings["apps"][settings["photo_override"]]
-        elif (settings["bezos_mode"]):
-            photoData = ["jeffrey", "Jeffrey Music"]
-        elif (appName != ""):
-            photoData = settings["apps"][appName]
 
-        if (details == ""):
-            RPC.update(
-                state=header, large_image=photoData[0], large_text=photoData[1])
-        else:
-            RPC.update(state=details, details=header,
-                       large_image=photoData[0], large_text=photoData[1])
-        print(data)
+def checkMusic(loop):
+    RPC=connect(loop)
+    while True:
+        media = asyncio.run(get_media_info(settings["validApps"]))
+        if (media == None):
+            media = dict(default)
+        appName = media['app_name']
+        media = {k: v for k,
+                v in media.items() if k in track}
+        if (media != track):
+            track.update(media)
+            data = [track['title'], track['artist'], track['album_title']]
+            if (data[0] == "" and data[1] == "" and data[2] == ""):
+                try:
+                    RPC.clear()
+                    print("Cleared")
+                except:
+                    RPC=connect(loop)
+            else:
+                if (settings['artist_first']):
+                    data = [track['artist'], track['title'], track['album_title']]
+
+                # Parse current track
+                if (data[0] == data[1]):  # If artist and title are the same, remove title
+                    data[1] = ""
+                elif (data[0] == ""):  # Artist is empty
+                    data[0] = data[1]
+                    data[1] = ""
+
+                # Apply settings
+                if (settings["no_parentheses"]):
+                    for i, val in enumerate(data):
+                        data[i] = re.sub(r"\([^()]*\)", "", val).strip()
+                if (settings["remove_explicit"]):
+                    for i, val in enumerate(data):
+                        data[i] = val.replace("[Explicit]", "").strip()
+                if (settings["remove_clean"]):
+                    for i, val in enumerate(data):
+                        data[i] = val.replace("[Clean]", "").strip()
+                if (settings["remove_feat"]):
+                    for i, val in enumerate(data):
+                        data[i] = re.sub(r"\[[^()]*\]", "", val).strip()
+                        if (data[i].find("feat.") != -1):
+                            data[i] = data[i][:data[i].find("feat.")].strip()
+                        if (data[i].find("ft.") != -1):
+                            data[i] = data[i][:data[i].find("ft.")].strip()
+                        if (data[i].find("FT.") != -1):
+                            data[i] = data[i][:data[i].find("FT.")].strip()
+
+                header = settings["listening_to"]+data[0]
+                details = data[1]
+                if (data[2] != ""):
+                    if (data[1] != ""):
+                        details += " - " + data[2]
+                    else:
+                        details = data[2]
+
+                photoData = ["fakephoto", "joe"]
+                if (settings["photo_override"] != ""):
+                    photoData = settings["apps"][settings["photo_override"]]
+                elif (settings["bezos_mode"]):
+                    photoData = ["jeffrey", "Jeffrey Music"]
+                elif (appName != ""):
+                    photoData = settings["apps"][appName]
+
+                try:
+                    if (details == ""):
+                        RPC.update(
+                            state=header, large_image=photoData[0], large_text=photoData[1])
+                    else:
+                        RPC.update(state=details, details=header,
+                                large_image=photoData[0], large_text=photoData[1])
+                    print(data)
+                except:
+                    RPC = connect(loop)
+        time.sleep(settings["check_interval"])
 
 
 def main():
@@ -179,7 +193,9 @@ def main():
             print("Running in dev mode")
     setup(isDev)
 
-    checkMusic(connect())
+    loop = asyncio.new_event_loop()
+    p = threading.Thread(target=checkMusic, args=(loop))
+    p.start()
 
     # ctrl+c handler
     def signal_handler(sig, frame):

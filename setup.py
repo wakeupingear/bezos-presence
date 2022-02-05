@@ -1,10 +1,16 @@
-from distutils.core import setup
-import py2exe
+import sys
+from cx_Freeze import setup, Executable
+
+# Dependencies are automatically detected, but it might need fine tuning.
+# "packages": ["os"] is used as example only
+build_exe_options = {"packages": ["os"], "excludes": ["tkinter"]}
+
+# base="Win32GUI" should be used only for Windows GUI app
+base = "Win32GUI"
 setup(
-    console=["bezos.py"],
-    options={"py2exe": {
-        "bundle_files": 1, "compressed": True, "optimize": 2,
-    }},
-    name="BezosPresence",
-    version="1.0.0"
+    name = "Bezos Presence",
+    version = "1.0",
+    description = "garbage",
+    options = {"build_exe": build_exe_options},
+    executables = [Executable("Bezos.py", base=base)]
 )
