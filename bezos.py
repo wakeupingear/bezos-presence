@@ -194,7 +194,7 @@ def main():
     setup(isDev)
 
     loop = asyncio.new_event_loop()
-    p = threading.Thread(target=checkMusic, args=(loop))
+    p = threading.Thread(target=checkMusic, args=(loop,))
     p.start()
 
     # ctrl+c handler
