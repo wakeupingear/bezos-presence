@@ -1,4 +1,4 @@
 asyncio
-winrt
+winsdk
 pypresence
 psutil
