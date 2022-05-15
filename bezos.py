@@ -9,7 +9,7 @@ import time
 from pypresence import Presence
 import re
 
-from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
+from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 
 # https://stackoverflow.com/questions/65011660/how-can-i-get-the-title-of-the-currently-playing-media-in-windows-10-with-python
 
