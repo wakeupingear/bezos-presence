@@ -2,3 +2,4 @@ settings.json
 logos/
 dist/
 __pycache__/
+build/
